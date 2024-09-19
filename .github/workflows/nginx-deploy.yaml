@@ -1,0 +1,28 @@
+name: Deploy Nginx Configuration
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy-nginx:
+    name: Deploy Nginx Configuration to EC2
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Copy Nginx config files to EC2
+        run: |
+          scp -o StrictHostKeyChecking=no -r ./nginx-config/* ubuntu@100.26.183.230:/etc/nginx/conf.d/
+
+      - name: Restart Nginx
+        run: |
+          ssh -o StrictHostKeyChecking=no ubuntu@100.26.183.230 'sudo systemctl restart nginx'
